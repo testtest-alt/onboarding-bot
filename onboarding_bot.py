@@ -63,12 +63,6 @@ for section in SECTIONS:
 
 TOTAL = len(QUESTIONS)
 
-GOODBYE = (
-    "Thank you for your application.\n\n"
-    "We appreciate you taking the time to apply. We will review your responses and get back "
-    "to you shortly with an update on the next steps."
-)
-
 WELCOME = (
     "Hello! Thank you for your interest in joining our team.\n\n"
     "Before we begin, please note that this role is strictly for experienced chatters "
@@ -76,8 +70,13 @@ WELCOME = (
     "or strong English skills, we kindly ask that you do not proceed with the application, "
     "as you will be wasting your time.\n\n"
     "Please also be aware that the use of AI to answer any questions is strictly prohibited "
-    "and will be easily detected.\n\n"
-    "Type /start whenever you're ready to begin."
+    "and will be easily detected."
+)
+
+GOODBYE = (
+    "Thank you for your application.\n\n"
+    "We appreciate you taking the time to apply. We will review your responses and get back "
+    "to you shortly with an update on the next steps."
 )
 
 
@@ -129,11 +128,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["answers"] = []
     context.user_data["step"] = 0
     context.user_data["started"] = True
-    await send_question(update, context, 0)
-
-
-async def intro(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(WELCOME)
+    await send_question(update, context, 0)
 
 
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -162,7 +158,6 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 if __name__ == "__main__":
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("hello", intro))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_answer))
     print("Bot is running...")
     app.run_polling()
