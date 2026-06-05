@@ -14,7 +14,7 @@ OWNER_ID = 7884865944
 
 SECTIONS = [
     {
-        "title": "📋 *Introduction Questions*",
+        "title": "📋 INTRODUCTION QUESTIONS",
         "questions": [
             "Can you briefly introduce yourself?",
             "What's your previous work or professional experience?",
@@ -24,12 +24,12 @@ SECTIONS = [
         ],
     },
     {
-        "title": "🎭 *Scenario-Based Questions*\n\n_Short creator profile to go off:_\n• 18 Years Old\n• Very playful and flirty\n• GFE Experience",
+        "title": "🎭 SCENARIO-BASED QUESTIONS\n\nShort creator profile:\n• 18 Years Old\n• Very playful and flirty\n• GFE Experience",
         "questions": [
             'A new subscriber messages: "Hey babe, I\'m really horny tonight. Tell me what you\'d do to me." How would you reply to build excitement and naturally lead toward a PPV or tip?',
             "A regular fan asks for a specific type of content or kink that the creator doesn't offer. How do you respond while keeping them subscribed and interested?",
             "Write a short welcome or renewal message for a subscriber that matches the creator's vibe and encourages engagement or spending.",
-            "A fan goes quiet after a few flirty messages and hasn't replied in 2–3 days. How would you re-engage them without sounding desperate?",
+            "A fan goes quiet after a few flirty messages and hasn't replied in 2-3 days. How would you re-engage them without sounding desperate?",
             "A subscriber says they're not in a private place right now and can't engage fully. How would you respond while protecting value and encouraging a purchase later?",
             'A subscriber complains: "I\'ve been subscribed for a week and you barely message me, I\'m thinking of unsubscribing." How would you rebuild excitement and retention?',
             "A fan sends an unsolicited explicit photo and asks for an immediate reaction. How would you respond in a way that engages and potentially leads to a sale?",
@@ -39,13 +39,13 @@ SECTIONS = [
         ],
     },
     {
-        "title": "⚙️ *Reliability, Professionalism & Performance*",
+        "title": "⚙️ RELIABILITY, PROFESSIONALISM & PERFORMANCE",
         "questions": [
             "What's your typing speed (words per minute)?",
-            "Are you comfortable managing 10–30+ conversations simultaneously without mixing up fan details?",
+            "Are you comfortable managing 10-30+ conversations simultaneously without mixing up fan details?",
             "How would you adapt your messaging style to match a specific creator's personality (e.g., innocent, dominant, playful, etc.)? Give a quick example.",
             "Are you willing to follow scripts/guidelines while still personalising replies, and strictly stay in character without breaking immersion?",
-            "What's your weekly availability and preferred shift length? Can you commit to consistent hours (e.g., 8–12 hour shifts, 6–7 days per week)?",
+            "What's your weekly availability and preferred shift length? Can you commit to consistent hours (e.g., 8-12 hour shifts, 6-7 days per week)?",
             "Do you have a reliable workspace (quiet environment, stable internet, proper setup) with minimal distractions?",
         ],
     },
@@ -64,20 +64,20 @@ for section in SECTIONS:
 TOTAL = len(QUESTIONS)
 
 GOODBYE = (
-    "✅ *Thank you for your application.*\n\n"
+    "Thank you for your application.\n\n"
     "We appreciate you taking the time to apply. We will review your responses and get back "
     "to you shortly with an update on the next steps."
 )
 
 WELCOME = (
-    "👋 *Hello! Thank you for your interest in joining our team.*\n\n"
-    "Before we begin, please note that this role is *strictly for experienced chatters* "
+    "Hello! Thank you for your interest in joining our team.\n\n"
+    "Before we begin, please note that this role is strictly for experienced chatters "
     "with excellent written English. If you do not have prior experience in this type of role "
     "or strong English skills, we kindly ask that you do not proceed with the application, "
     "as you will be wasting your time.\n\n"
-    "Please also be aware that the *use of AI to answer any questions is strictly prohibited* "
+    "Please also be aware that the use of AI to answer any questions is strictly prohibited "
     "and will be easily detected.\n\n"
-    "Type /start whenever you're ready to begin ✅"
+    "Type /start whenever you're ready to begin."
 )
 
 
@@ -85,8 +85,8 @@ async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE, step
     prefix = ""
     if step in SECTION_MAP:
         prefix = f"\n{SECTION_MAP[step]}\n\n"
-    q_text = f"{prefix}*Q{step + 1} of {TOTAL}*\n{QUESTIONS[step]}"
-    await update.message.reply_text(q_text, parse_mode="Markdown")
+    q_text = f"{prefix}Q{step + 1} of {TOTAL}:\n{QUESTIONS[step]}"
+    await update.message.reply_text(q_text)
 
 
 async def forward_to_owner(context: ContextTypes.DEFAULT_TYPE, user):
@@ -96,11 +96,11 @@ async def forward_to_owner(context: ContextTypes.DEFAULT_TYPE, user):
     logger.info(f"Attempting to forward application to owner {OWNER_ID} from {username}")
 
     lines = [
-        f"📥 *New Application Received*",
-        f"👤 Name: {full_name}",
-        f"🔗 Username: {username}",
-        f"🆔 User ID: `{user.id}`",
-        f"",
+        "📥 NEW APPLICATION RECEIVED",
+        f"Name: {full_name}",
+        f"Username: {username}",
+        f"User ID: {user.id}",
+        "",
     ]
 
     current_section = None
@@ -108,8 +108,8 @@ async def forward_to_owner(context: ContextTypes.DEFAULT_TYPE, user):
         if i in SECTION_MAP:
             current_section = SECTION_MAP[i]
             lines.append(f"\n{current_section}\n")
-        lines.append(f"*Q{i + 1}:* {QUESTIONS[i]}")
-        lines.append(f"➡️ {answer}\n")
+        lines.append(f"Q{i + 1}: {QUESTIONS[i]}")
+        lines.append(f"Answer: {answer}\n")
 
     message = "\n".join(lines)
     chunks = [message[i:i+4000] for i in range(0, len(message), 4000)]
@@ -118,8 +118,7 @@ async def forward_to_owner(context: ContextTypes.DEFAULT_TYPE, user):
         for chunk in chunks:
             await context.bot.send_message(
                 chat_id=OWNER_ID,
-                text=chunk,
-                parse_mode="Markdown"
+                text=chunk
             )
         logger.info("Successfully forwarded application to owner")
     except Exception as e:
@@ -135,18 +134,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def intro(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(WELCOME, parse_mode="Markdown")
+    await update.message.reply_text(WELCOME)
 
 
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.user_data.get("started"):
-        await update.message.reply_text("👋 Type /start to begin your application.")
+        await update.message.reply_text("Type /start to begin your application.")
         return
 
     step = context.user_data["step"]
 
     if step >= TOTAL:
-        await update.message.reply_text("You've already completed the application. Thank you! ✅")
+        await update.message.reply_text("You've already completed the application. Thank you!")
         return
 
     context.user_data["answers"].append(update.message.text)
@@ -157,7 +156,7 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await send_question(update, context, step)
     else:
         context.user_data["started"] = False
-        await update.message.reply_text(GOODBYE, parse_mode="Markdown")
+        await update.message.reply_text(GOODBYE)
         await forward_to_owner(context, update.effective_user)
 
 
