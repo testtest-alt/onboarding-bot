@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 OWNER_IDS = [7884865944, 8924772643]
+
 SECTIONS = [
     {
         "title": "📋 INTRODUCTION QUESTIONS",
@@ -92,7 +93,7 @@ async def forward_to_owner(context: ContextTypes.DEFAULT_TYPE, user):
     username = f"@{user.username}" if user.username else f"ID:{user.id}"
     full_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or "Unknown"
 
-    logger.info(f"Attempting to forward application to owner {OWNER_ID} from {username}")
+    logger.info(f"Attempting to forward application from {username}")
 
     lines = [
         "📥 NEW APPLICATION RECEIVED",
@@ -102,11 +103,9 @@ async def forward_to_owner(context: ContextTypes.DEFAULT_TYPE, user):
         "",
     ]
 
-    current_section = None
     for i, answer in enumerate(context.user_data["answers"]):
         if i in SECTION_MAP:
-            current_section = SECTION_MAP[i]
-            lines.append(f"\n{current_section}\n")
+            lines.append(f"\n{SECTION_MAP[i]}\n")
         lines.append(f"Q{i + 1}: {QUESTIONS[i]}")
         lines.append(f"Answer: {answer}\n")
 
@@ -114,12 +113,13 @@ async def forward_to_owner(context: ContextTypes.DEFAULT_TYPE, user):
     chunks = [message[i:i+4000] for i in range(0, len(message), 4000)]
 
     try:
-        for chunk in chunks:
-            await context.bot.send_message(
-                chat_id=OWNER_ID,
-                text=chunk
-            )
-        logger.info("Successfully forwarded application to owner")
+        for owner_id in OWNER_IDS:
+            for chunk in chunks:
+                await context.bot.send_message(
+                    chat_id=owner_id,
+                    text=chunk
+                )
+        logger.info("Successfully forwarded application to all owners")
     except Exception as e:
         logger.error(f"Failed to send to owner: {e}")
 
