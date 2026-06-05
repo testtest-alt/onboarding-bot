@@ -7,11 +7,10 @@ from telegram.ext import (
 )
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 OWNER_ID = 7884865944
-
-# ── Questions ──────────────────────────────────────────────────────────────────
 
 SECTIONS = [
     {
@@ -52,9 +51,8 @@ SECTIONS = [
     },
 ]
 
-# Flatten into one list while tracking section breaks
-QUESTIONS = []       # list of question strings
-SECTION_MAP = {}     # question index → section title (only first Q of each section)
+QUESTIONS = []
+SECTION_MAP = {}
 
 idx = 0
 for section in SECTIONS:
@@ -64,6 +62,12 @@ for section in SECTIONS:
         idx += 1
 
 TOTAL = len(QUESTIONS)
+
+GOODBYE = (
+    "✅ *Thank you for your application.*\n\n"
+    "We appreciate you taking the time to apply. We will review your responses and get back "
+    "to you shortly with an update on the next steps."
+)
 
 WELCOME = (
     "👋 *Hello! Thank you for your interest in joining our team.*\n\n"
@@ -76,27 +80,11 @@ WELCOME = (
     "Type /start whenever you're ready to begin ✅"
 )
 
-GOODBYE = (
-    "✅ *Thank you for your application.*\n\n"
-    "We appreciate you taking the time to apply. We will review your responses and get back "
-    "to you shortly with an update on the next steps."
-)
-
-# ── Helpers ────────────────────────────────────────────────────────────────────
-
-def get_user_data(context: ContextTypes.DEFAULT_TYPE) -> dict:
-    if "answers" not in context.user_data:
-        context.user_data["answers"] = []
-        context.user_data["step"] = -1
-        context.user_data["started"] = False
-    return context.user_data
-
 
 async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE, step: int):
     prefix = ""
     if step in SECTION_MAP:
         prefix = f"\n{SECTION_MAP[step]}\n\n"
-
     q_text = f"{prefix}*Q{step + 1} of {TOTAL}*\n{QUESTIONS[step]}"
     await update.message.reply_text(q_text, parse_mode="Markdown")
 
@@ -104,6 +92,8 @@ async def send_question(update: Update, context: ContextTypes.DEFAULT_TYPE, step
 async def forward_to_owner(context: ContextTypes.DEFAULT_TYPE, user):
     username = f"@{user.username}" if user.username else f"ID:{user.id}"
     full_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or "Unknown"
+
+    logger.info(f"Attempting to forward application to owner {OWNER_ID} from {username}")
 
     lines = [
         f"📥 *New Application Received*",
@@ -121,17 +111,20 @@ async def forward_to_owner(context: ContextTypes.DEFAULT_TYPE, user):
         lines.append(f"*Q{i + 1}:* {QUESTIONS[i]}")
         lines.append(f"➡️ {answer}\n")
 
-    # Telegram max message length is 4096 — split if needed
     message = "\n".join(lines)
     chunks = [message[i:i+4000] for i in range(0, len(message), 4000)]
-    for chunk in chunks:
-        await context.bot.send_message(
-            chat_id=OWNER_ID,
-            text=chunk,
-            parse_mode="Markdown"
-        )
 
-# ── Handlers ───────────────────────────────────────────────────────────────────
+    try:
+        for chunk in chunks:
+            await context.bot.send_message(
+                chat_id=OWNER_ID,
+                text=chunk,
+                parse_mode="Markdown"
+            )
+        logger.info("Successfully forwarded application to owner")
+    except Exception as e:
+        logger.error(f"Failed to send to owner: {e}")
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
@@ -146,36 +139,27 @@ async def intro(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    data = get_user_data(context)
-
-    if not data.get("started"):
-        await update.message.reply_text(
-            "👋 Welcome! Type /start to begin your application.",
-            parse_mode="Markdown"
-        )
+    if not context.user_data.get("started"):
+        await update.message.reply_text("👋 Type /start to begin your application.")
         return
 
-    step = data["step"]
+    step = context.user_data["step"]
 
     if step >= TOTAL:
         await update.message.reply_text("You've already completed the application. Thank you! ✅")
         return
 
-    # Save answer
-    data["answers"].append(update.message.text)
+    context.user_data["answers"].append(update.message.text)
     step += 1
-    data["step"] = step
+    context.user_data["step"] = step
 
     if step < TOTAL:
         await send_question(update, context, step)
     else:
-        # Done
-        data["started"] = False
+        context.user_data["started"] = False
         await update.message.reply_text(GOODBYE, parse_mode="Markdown")
         await forward_to_owner(context, update.effective_user)
 
-
-# ── Main ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     app = ApplicationBuilder().token(BOT_TOKEN).build()
