@@ -10,8 +10,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
-OWNER_ID = 7884865944
-
+OWNER_IDS = [7884865944, 8924772643]
 SECTIONS = [
     {
         "title": "📋 INTRODUCTION QUESTIONS",
